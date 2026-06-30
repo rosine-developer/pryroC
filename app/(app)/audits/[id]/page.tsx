@@ -35,7 +35,7 @@ import {
 import {
   ArrowLeft, CheckCircle, Clock, Play, Pause, ChevronRight,
   FileCheck, Calendar, Users, AlertTriangle, FolderOpen,
-  Plus, Check, ClipboardList, Upload, Flag, FileText, Download, Target, Building
+  Plus, Check, ClipboardList, Upload, Flag, FileText, Download, Target, Building, Search
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
