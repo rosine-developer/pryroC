@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./pryrogrc.db"
+}
+
+// User Management with Role-Based Access Control
+enum UserRole {
+  ADMINISTRATOR
+  LEAD_AUDITOR
+  AUDITOR
+  COMPLIANCE_OFFICER
+  DEPARTMENT_OWNER
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          UserRole   @default(AUDITOR)
+  department    String?
+  avatar        String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  auditsAsLead           Audit[]               @relation("AuditLead")
+  auditsAsAuditor        AuditAuditor[]
+  findingsAssigned       Finding[]             @relation("FindingOwner")
+  findingsReporter       Finding[]             @relation("FindingReporter")
+  correctiveActions      CorrectiveAction[]
+  evidenceUploaded       Evidence[]            @relation("EvidenceUploader")
+  evidenceApproved       Evidence[]            @relation("EvidenceApprover")
+  auditTrailEntries      AuditTrail[]
+  activities             Activity[]
+
+  @@map("users")
+}
+
+// Unified Regulatory Matrix - Core Feature 1
+enum RegulationCategory {
+  DATA_PRIVACY
+  INFORMATION_SECURITY
+  FINANCIAL
+  OPERATIONAL
+  LEGAL
+  INDUSTRY_SPECIFIC
+  INTERNAL_POLICY
+  LABOR
+  ENVIRONMENTAL
+  QUALITY
+}
+
+enum RegulationStatus {
+  ACTIVE
+  DRAFT
+  UNDER_REVIEW
+  SUPERSEDED
+  WITHDRAWN
+}
+
+model Regulation {
+  id             String              @id @default(uuid())
+  name           String
+  description    String?
+  authority      String
+  country        String?
+  region         String?
+  category       RegulationCategory
+  version        String?
+  effectiveDate  DateTime?
+  status         RegulationStatus     @default(ACTIVE)
+  externalUrl    String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  // Relations
+  requirements  Requirement[]
+  audits        AuditRegulation[]
+
+  @@map("regulations")
+}
+
+// Compliance Requirements
+enum RequirementType {
+  MANDATORY
+  RECOMMENDED
+  OPTIONAL
+}
+
+enum RequirementPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum RequirementStatus {
+  COMPLIANT
+  NON_COMPLIANT
+  PARTIALLY_COMPLIANT
+  NOT_APPLICABLE
+  PENDING_REVIEW
+}
+
+model Requirement {
+  id                    String                @id @default(uuid())
+  requirementId         String                @unique
+  title                 String
+  description           String?
+  regulationId          String
+  requirementType       RequirementType        @default(MANDATORY)
+  responsibleDepartment String?
+  priority              RequirementPriority    @default(MEDIUM)
+  reviewFrequency       String?
+  status                RequirementStatus      @default(PENDING_REVIEW)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  // Relations
+  regulation           Regulation             @relation(fields: [regulationId], references: [id])
+  evidence             Evidence[]
+  auditRequirements    AuditRequirement[]
+  findings             Finding[]
+
+  @@map("requirements")
+}
+
+// Automated Evidence Locker - Core Feature 2
+enum EvidenceType {
+  PDF
+  WORD
+  EXCEL
+  IMAGE
+  SCREENSHOT
+  CERTIFICATE
+  POLICY
+  VIDEO
+  OTHER
+}
+
+enum EvidenceStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+model Evidence {
+  id                    String          @id @default(uuid())
+  evidenceId            String          @unique
+  title                 String
+  description           String?
+  type                  EvidenceType
+  fileName              String?
+  filePath              String?
+  fileSize              Int?
+  mimeType              String?
+  version               String          @default("1.0")
+  tags                  String
+  status                EvidenceStatus  @default(DRAFT)
+  uploadedById          String
+  uploadedAt            DateTime        @default(now())
+  lastModified          DateTime        @updatedAt
+  approvedById          String?
+  approvedAt            DateTime?
+
+  // Relations
+  uploadedBy            User            @relation("EvidenceUploader", fields: [uploadedById], references: [id])
+  approvedBy            User?           @relation("EvidenceApprover", fields: [approvedById], references: [id])
+  requirementId         String?
+  requirement           Requirement?    @relation(fields: [requirementId], references: [id])
+  auditId               String?
+  audit                 Audit?          @relation(fields: [auditId], references: [id])
+  findings              FindingEvidence[]
+  correctiveActions     CorrectiveAction[]  @relation("CorrectiveActionEvidence")
+
+  @@map("evidence")
+}
+
+// Audit Management - Core Feature 4
+enum AuditType {
+  INTERNAL
+  EXTERNAL
+  COMPLIANCE
+  OPERATIONAL
+  FINANCIAL
+  IT
+  SPECIAL
+}
+
+enum AuditStatus {
+  PLANNING
+  SCHEDULED
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  CLOSED
+}
+
+model Audit {
+  id                    String              @id @default(uuid())
+  auditNumber           String              @unique
+  type                  AuditType
+  title                 String
+  objective             String?
+  scope                 String?
+  department            String?
+  startDate             DateTime?
+  endDate               DateTime?
+  status                AuditStatus          @default(PLANNING)
+  progress              Int                   @default(0)
+  notes                 String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  // Relations
+  leadAuditorId         String
+  leadAuditor           User                 @relation("AuditLead", fields: [leadAuditorId], references: [id])
+  auditors              AuditAuditor[]
+  regulations           AuditRegulation[]
+  requirements          AuditRequirement[]
+  evidence              Evidence[]
+  findings              Finding[]
+
+  @@map("audits")
+}
+
+// Many-to-Many: Audits and Auditors
+model AuditAuditor {
+  auditId     String
+  auditorId   String
+  assignedAt  DateTime @default(now())
+
+  audit       Audit    @relation(fields: [auditId], references: [id])
+  auditor     User     @relation(fields: [auditorId], references: [id])
+
+  @@id([auditId, auditorId])
+  @@map("audit_auditors")
+}
+
+// Many-to-Many: Audits and Regulations
+model AuditRegulation {
+  auditId       String
+  regulationId  String
+  addedAt       DateTime @default(now())
+  addedById     String?
+
+  audit         Audit        @relation(fields: [auditId], references: [id])
+  regulation    Regulation   @relation(fields: [regulationId], references: [id])
+
+  @@id([auditId, regulationId])
+  @@map("audit_regulations")
+}
+
+// Audit Requirements tracking
+enum AuditRequirementStatus {
+  NOT_STARTED
+  IN_REVIEW
+  COMPLIANT
+  NON_COMPLIANT
+  PARTIALLY_COMPLIANT
+  NOT_APPLICABLE
+}
+
+model AuditRequirement {
+  id                String                    @id @default(uuid())
+  auditId           String
+  requirementId     String
+  status            AuditRequirementStatus     @default(NOT_STARTED)
+  notes             String?
+  reviewedAt        DateTime?
+  reviewedById      String?
+
+  audit             Audit                     @relation(fields: [auditId], references: [id])
+  requirement       Requirement               @relation(fields: [requirementId], references: [id])
+
+  @@unique([auditId, requirementId])
+  @@map("audit_requirements")
+}
+
+// Findings Management - Core Feature 5
+enum FindingSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  OBSERVATION
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  OVERDUE
+}
+
+model Finding {
+  id                    String            @id @default(uuid())
+  findingNumber         String            @unique
+  title                 String
+  description           String
+  severity              FindingSeverity
+  riskLevel             String?
+  evidence              String?
+  recommendation        String?
+  dueDate               DateTime?
+  status                FindingStatus      @default(OPEN)
+  resolvedAt            DateTime?
+  closedAt              DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  // Relations
+  auditId               String
+  audit                 Audit              @relation(fields: [auditId], references: [id])
+  requirementId         String?
+  requirement           Requirement?       @relation(fields: [requirementId], references: [id])
+  reporterId            String
+  reporter              User               @relation("FindingReporter", fields: [reporterId], references: [id])
+  ownerId               String?
+  owner                 User?              @relation("FindingOwner", fields: [ownerId], references: [id])
+  correctiveActions     CorrectiveAction[]
+  linkedEvidence        FindingEvidence[]
+
+  @@map("findings")
+}
+
+// Many-to-Many: Findings and Evidence
+model FindingEvidence {
+  findingId    String
+  evidenceId   String
+  linkedAt     DateTime @default(now())
+
+  finding      Finding  @relation(fields: [findingId], references: [id])
+  evidence     Evidence @relation(fields: [evidenceId], references: [id])
+
+  @@id([findingId, evidenceId])
+  @@map("finding_evidence")
+}
+
+// Corrective Action Management - Core Feature 6
+enum CorrectiveActionPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum CorrectiveActionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PENDING_VERIFICATION
+  COMPLETED
+  CLOSED
+  OVERDUE
+}
+
+model CorrectiveAction {
+  id                    String                  @id @default(uuid())
+  actionNumber          String                  @unique
+  description           String
+  department            String?
+  priority              CorrectiveActionPriority @default(MEDIUM)
+  dueDate               DateTime?
+  status                CorrectiveActionStatus   @default(NOT_STARTED)
+  progress              Int                     @default(0)
+  completionNotes       String?
+  completedAt           DateTime?
+  verifiedAt            DateTime?
+  verifiedById          String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  // Relations
+  findingId             String
+  finding               Finding                @relation(fields: [findingId], references: [id])
+  assignedToId          String
+  assignedTo            User                   @relation(fields: [assignedToId], references: [id])
+  completionEvidenceId  String?
+  completionEvidence    Evidence?              @relation("CorrectiveActionEvidence", fields: [completionEvidenceId], references: [id])
+
+  @@map("corrective_actions")
+}
+
+// Audit Trail - Complete History Tracking
+enum AuditTrailAction {
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  UPLOAD
+  DOWNLOAD
+  ASSIGN
+  STATUS_CHANGE
+  COMMENT
+}
+
+model AuditTrail {
+  id              String           @id @default(uuid())
+  action          AuditTrailAction
+  entityType      String
+  entityId        String
+  userId          String
+  oldValue        String?
+  newValue        String?
+  ipAddress       String?
+  userAgent       String?
+  description     String
+  createdAt       DateTime         @default(now())
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@map("audit_trail")
+}
+
+// Activity Feed for Dashboard
+model Activity {
+  id              String    @id @default(uuid())
+  userId          String
+  type            String
+  title           String
+  description     String?
+  entityType      String?
+  entityId        String?
+  createdAt       DateTime   @default(now())
+
+  // Relations
+  user            User       @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@map("activities")
+}
+
+// Settings and Configuration
+model Setting {
+  id            String    @id @default(uuid())
+  key          String    @unique
+  value        String
+  category     String?
+  description  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("settings")
+}
