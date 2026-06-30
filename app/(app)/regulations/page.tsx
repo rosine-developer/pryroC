@@ -65,6 +65,7 @@ interface Regulation {
   effectiveDate?: string;
   status: string;
   createdAt: string;
+  externalUrl?: string;
   _count?: { requirements: number };
 }
 
@@ -96,6 +97,8 @@ export default function RegulationsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
 
   useEffect(() => {
     fetchRegulations();
@@ -118,6 +121,18 @@ export default function RegulationsPage() {
       console.error('Failed to fetch regulations:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this regulation?')) return;
+    try {
+      const response = await fetch(`/api/regulations/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) fetchRegulations();
+    } catch (error) {
+      console.error('Failed to delete regulation:', error);
     }
   };
 
@@ -158,6 +173,26 @@ export default function RegulationsPage() {
               setCreateDialogOpen(false);
               fetchRegulations();
             }} />
+          </DialogContent>
+        </Dialog>
+        
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Regulation</DialogTitle>
+              <DialogDescription>
+                Update the details of the regulation
+              </DialogDescription>
+            </DialogHeader>
+            {selectedRegulation && (
+              <RegulationForm 
+                initialData={selectedRegulation}
+                onSuccess={() => {
+                  setEditDialogOpen(false);
+                  fetchRegulations();
+                }} 
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -291,11 +326,14 @@ export default function RegulationsPage() {
                                 View Details
                               </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedRegulation(reg);
+                              setEditDialogOpen(true);
+                            }}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(reg.id)}>
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
@@ -314,39 +352,59 @@ export default function RegulationsPage() {
   );
 }
 
-function RegulationForm({ onSuccess }: { onSuccess: () => void }) {
+function RegulationForm({ onSuccess, initialData }: { onSuccess: () => void, initialData?: Regulation }) {
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    authority: '',
-    country: '',
-    region: '',
-    category: 'INFORMATION_SECURITY',
-    version: '',
-    effectiveDate: '',
-    externalUrl: '',
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    authority: initialData?.authority || '',
+    country: initialData?.country || '',
+    region: initialData?.region || '',
+    category: initialData?.category || 'INFORMATION_SECURITY',
+    version: initialData?.version || '',
+    effectiveDate: initialData?.effectiveDate ? new Date(initialData.effectiveDate).toISOString().split('T')[0] : '',
+    externalUrl: initialData?.externalUrl || '',
+    status: initialData?.status || 'ACTIVE',
   });
   const [loading, setLoading] = useState(false);
+
+  const authorities = [
+    'ISO/IEC', 'ISO', 'IEC', 'NIST', 'AICPA',
+    'European Parliament', 'European Commission',
+    'U.S. Congress / SEC', 'U.S. Department of Health and Human Services',
+    'PCI Security Standards Council', 'Basel Committee on Banking Supervision (BIS)',
+    'International Labour Organization (ILO)', 'California State Legislature',
+    'UK Parliament', 'Australian Government', 'Canadian Government',
+    'Financial Conduct Authority (FCA)', 'ENISA', 'GDPR Authority',
+    'Other',
+  ];
+
+  const countries = [
+    'International', 'European Union', 'United States', 'United Kingdom',
+    'Canada', 'Australia', 'Germany', 'France', 'Netherlands', 'Sweden',
+    'Singapore', 'Japan', 'China', 'India', 'Brazil', 'South Africa',
+    'Rwanda', 'Kenya', 'Nigeria', 'Other',
+  ];
+
+  const regions = [
+    'Global', 'Europe', 'North America', 'South America', 'Asia Pacific',
+    'Middle East & Africa', 'East Africa', 'West Africa', 'Southern Africa',
+    'North Africa', 'Southeast Asia', 'South Asia', 'Oceania', 'Other',
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const response = await fetch('/api/regulations', {
-        method: 'POST',
+      const url = initialData ? `/api/regulations/${initialData.id}` : '/api/regulations';
+      const method = initialData ? 'PUT' : 'POST';
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          status: 'ACTIVE',
-        }),
+        body: JSON.stringify({ ...formData, status: formData.status || 'ACTIVE' }),
       });
-
-      if (response.ok) {
-        onSuccess();
-      }
+      if (response.ok) onSuccess();
     } catch (error) {
-      console.error('Failed to create regulation:', error);
+      console.error('Failed to save regulation:', error);
     } finally {
       setLoading(false);
     }
@@ -366,14 +424,20 @@ function RegulationForm({ onSuccess }: { onSuccess: () => void }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="authority">Authority *</Label>
-          <Input
-            id="authority"
-            placeholder="e.g., European Union, ISO"
+          <Label>Authority *</Label>
+          <Select
             value={formData.authority}
-            onChange={(e) => setFormData({ ...formData, authority: e.target.value })}
-            required
-          />
+            onValueChange={(v) => setFormData({ ...formData, authority: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select authority..." />
+            </SelectTrigger>
+            <SelectContent>
+              {authorities.map((a) => (
+                <SelectItem key={a} value={a}>{a}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -390,14 +454,12 @@ function RegulationForm({ onSuccess }: { onSuccess: () => void }) {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="category">Category *</Label>
+          <Label>Category *</Label>
           <Select
             value={formData.category}
-            onValueChange={(value) => setFormData({ ...formData, category: value })}
+            onValueChange={(v) => setFormData({ ...formData, category: v })}
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {Object.entries(categoryLabels).map(([key, label]) => (
                 <SelectItem key={key} value={key}>{label}</SelectItem>
@@ -406,34 +468,61 @@ function RegulationForm({ onSuccess }: { onSuccess: () => void }) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
-          <Input
-            id="country"
-            placeholder="e.g., United States"
+          <Label>Country</Label>
+          <Select
             value={formData.country}
-            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-          />
+            onValueChange={(v) => setFormData({ ...formData, country: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select country..." />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="region">Region</Label>
-          <Input
-            id="region"
-            placeholder="e.g., EU, APAC"
+          <Label>Region</Label>
+          <Select
             value={formData.region}
-            onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-          />
+            onValueChange={(v) => setFormData({ ...formData, region: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select region..." />
+            </SelectTrigger>
+            <SelectContent>
+              {regions.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="version">Version</Label>
-          <Input
-            id="version"
-            placeholder="e.g., 2024, v2.0"
+          <Label>Version</Label>
+          <Select
             value={formData.version}
-            onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-          />
+            onValueChange={(v) => setFormData({ ...formData, version: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select version..." />
+            </SelectTrigger>
+            <SelectContent>
+              {['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017',
+                '2016', '2015', '2014', '2013', '2012', '2011', '2010',
+                'v1.0', 'v2.0', 'v3.0', 'v4.0', 'v5.0',
+                'v1.1', 'v2.1', 'v3.1', 'v4.1',
+                'Rev 1', 'Rev 2', 'Rev 3',
+                'Edition 1', 'Edition 2', 'Edition 3',
+              ].map((v) => (
+                <SelectItem key={v} value={v}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="effectiveDate">Effective Date</Label>
@@ -458,11 +547,9 @@ function RegulationForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="outline" onClick={onSuccess}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Regulation'}
+        <Button type="button" variant="outline" onClick={onSuccess}>Cancel</Button>
+        <Button type="submit" disabled={loading || !formData.name || !formData.authority}>
+          {loading ? 'Saving...' : initialData ? 'Update Regulation' : 'Create Regulation'}
         </Button>
       </div>
     </form>

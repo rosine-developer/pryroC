@@ -130,3 +130,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const token = request.cookies.get('auth-token')?.value;
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await getUserFromToken(token);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await request.json();
+    const { id, progress, status } = body;
+
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+    const updateData: Record<string, unknown> = {};
+    if (progress !== undefined) updateData.progress = progress;
+    if (status !== undefined) {
+      updateData.status = status;
+      if (status === 'COMPLETED') updateData.completedAt = new Date();
+    }
+    // Auto-set status based on progress
+    if (progress !== undefined && status === undefined) {
+      if (progress === 0) updateData.status = 'NOT_STARTED';
+      else if (progress === 100) { updateData.status = 'COMPLETED'; updateData.completedAt = new Date(); }
+      else updateData.status = 'IN_PROGRESS';
+    }
+
+    const action = await prisma.correctiveAction.update({
+      where: { id },
+      data: updateData,
+    });
+
+    await prisma.auditTrail.create({
+      data: {
+        action: 'UPDATE',
+        entityType: 'CORRECTIVE_ACTION',
+        entityId: action.id,
+        userId: user.id,
+        description: `Updated corrective action: ${action.actionNumber}`,
+        newValue: JSON.stringify(updateData),
+      },
+    });
+
+    return NextResponse.json(action);
+  } catch (error) {
+    console.error('Update corrective action error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

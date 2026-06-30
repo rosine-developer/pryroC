@@ -121,6 +121,25 @@ export default function AuditsPage() {
     }
   };
 
+  const updateStatus = async (auditId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/audits/${auditId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          ...(newStatus === 'IN_PROGRESS' ? { startDate: new Date().toISOString() } : {}),
+          ...(newStatus === 'COMPLETED' ? { endDate: new Date().toISOString(), progress: 100 } : {}),
+        }),
+      });
+      if (res.ok) {
+        fetchAudits();
+      }
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -147,7 +166,7 @@ export default function AuditsPage() {
               Create Audit
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Audit</DialogTitle>
               <DialogDescription>
@@ -349,19 +368,25 @@ export default function AuditsPage() {
                               </Link>
                             </DropdownMenuItem>
                             {audit.status === 'PLANNING' && (
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(audit.id, 'IN_PROGRESS')}>
                                 <Play className="mr-2 h-4 w-4" />
                                 Start Audit
                               </DropdownMenuItem>
                             )}
                             {audit.status === 'IN_PROGRESS' && (
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(audit.id, 'PAUSED')}>
                                 <Pause className="mr-2 h-4 w-4" />
                                 Pause Audit
                               </DropdownMenuItem>
                             )}
-                            {(audit.status === 'COMPLETED' || audit.status === 'IN_PROGRESS') && (
-                              <DropdownMenuItem>
+                            {audit.status === 'PAUSED' && (
+                              <DropdownMenuItem onClick={() => updateStatus(audit.id, 'IN_PROGRESS')}>
+                                <Play className="mr-2 h-4 w-4" />
+                                Resume Audit
+                              </DropdownMenuItem>
+                            )}
+                            {(audit.status === 'IN_PROGRESS' || audit.status === 'PAUSED') && (
+                              <DropdownMenuItem onClick={() => updateStatus(audit.id, 'COMPLETED')}>
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Complete
                               </DropdownMenuItem>
@@ -450,13 +475,29 @@ function AuditForm({ onSuccess }: { onSuccess: () => void }) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
-          <Input
-            id="department"
-            placeholder="e.g., Security, Finance"
+          <Label>Department *</Label>
+          <Select
             value={formData.department}
-            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-          />
+            onValueChange={(value) => setFormData({ ...formData, department: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select department..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="IT">IT / Technology</SelectItem>
+              <SelectItem value="Finance">Finance</SelectItem>
+              <SelectItem value="Security">Security</SelectItem>
+              <SelectItem value="HR">Human Resources</SelectItem>
+              <SelectItem value="Legal">Legal & Compliance</SelectItem>
+              <SelectItem value="Operations">Operations</SelectItem>
+              <SelectItem value="Sales">Sales</SelectItem>
+              <SelectItem value="Marketing">Marketing</SelectItem>
+              <SelectItem value="Procurement">Procurement</SelectItem>
+              <SelectItem value="R&D">Research & Development</SelectItem>
+              <SelectItem value="Executive">Executive</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

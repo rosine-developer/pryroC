@@ -61,6 +61,7 @@ interface Evidence {
   description?: string;
   type: string;
   fileName?: string;
+  filePath?: string;
   fileSize?: number;
   version: string;
   tags: string;
@@ -144,6 +145,16 @@ export default function EvidencePage() {
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this evidence?')) return;
+    try {
+      const response = await fetch(`/api/evidence/${id}`, { method: 'DELETE' });
+      if (response.ok) fetchEvidence();
+    } catch (error) {
+      console.error('Failed to delete evidence:', error);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -169,7 +180,7 @@ export default function EvidencePage() {
               Upload Evidence
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Upload Evidence</DialogTitle>
               <DialogDescription>
@@ -357,15 +368,19 @@ export default function EvidencePage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
+                              <DropdownMenuItem asChild>
+                                <Link href={`/evidence/${item.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Details
+                                </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
+                              {item.filePath && (
+                                <DropdownMenuItem onClick={() => window.open(item.filePath, '_blank')}>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Download
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(item.id)}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
@@ -394,6 +409,7 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
     requirementId: '',
     auditId: '',
   });
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [requirements, setRequirements] = useState<{ id: string; requirementId: string; title: string }[]>([]);
 
@@ -414,21 +430,36 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.title && !file) return;
     setLoading(true);
 
     try {
+      const data = new FormData();
+      if (file) data.append('file', file);
+      
+      const titleToUse = formData.title || file?.name || '';
+      data.append('title', titleToUse);
+      data.append('description', formData.description);
+      
+      const ext = file?.name.split('.').pop()?.toUpperCase();
+      const typeMap: Record<string, string> = { PDF: 'PDF', DOC: 'WORD', DOCX: 'WORD', XLS: 'EXCEL', XLSX: 'EXCEL', PNG: 'IMAGE', JPG: 'IMAGE', JPEG: 'IMAGE', GIF: 'IMAGE', MP4: 'VIDEO', MOV: 'VIDEO' };
+      const detectedType = (ext && typeMap[ext]) || formData.type;
+      data.append('type', detectedType);
+      
+      data.append('tags', formData.tags);
+      if (formData.requirementId) data.append('requirementId', formData.requirementId);
+      if (formData.auditId) data.append('auditId', formData.auditId);
+
       const response = await fetch('/api/evidence', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          fileName: formData.title,
-          fileSize: 0,
-        }),
+        body: data,
       });
 
       if (response.ok) {
         onSuccess();
+      } else {
+        const resData = await response.json();
+        alert(resData.error || 'Failed to upload');
       }
     } catch (error) {
       console.error('Failed to upload evidence:', error);
@@ -439,6 +470,52 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* File upload area */}
+      <div
+        className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors"
+        onClick={() => document.getElementById('evidence-file-input')?.click()}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => {
+          e.preventDefault();
+          const droppedFile = e.dataTransfer.files[0];
+          if (droppedFile) {
+            setFile(droppedFile);
+            if (!formData.title) setFormData(f => ({ ...f, title: droppedFile.name }));
+          }
+        }}
+      >
+        <input
+          id="evidence-file-input"
+          type="file"
+          className="hidden"
+          onChange={e => {
+            const selectedFile = e.target.files?.[0];
+            if (selectedFile) {
+              setFile(selectedFile);
+              if (!formData.title) setFormData(f => ({ ...f, title: selectedFile.name }));
+            }
+          }}
+        />
+        {file ? (
+          <div className="space-y-1">
+            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            <p className="text-sm font-medium">{file.name}</p>
+            <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+            <button type="button" className="text-xs text-destructive hover:underline" onClick={e => { e.stopPropagation(); setFile(null); }}>Remove</button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mx-auto">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium">Click to upload or drag & drop</p>
+            <p className="text-xs text-muted-foreground">Any file type supported</p>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="title">Title *</Label>
         <Input

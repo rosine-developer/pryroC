@@ -61,9 +61,22 @@ export async function PUT(
       return NextResponse.json({ error: 'Regulation not found' }, { status: 404 });
     }
 
+    const { name, description, authority, country, region, category, version, effectiveDate, externalUrl, status } = body;
+
     const regulation = await prisma.regulation.update({
       where: { id: params.id },
-      data: body,
+      data: {
+        name,
+        description,
+        authority,
+        country,
+        region,
+        category,
+        version,
+        effectiveDate: effectiveDate ? new Date(effectiveDate) : null,
+        externalUrl,
+        status,
+      },
     });
 
     await prisma.auditTrail.create({

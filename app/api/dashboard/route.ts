@@ -123,34 +123,90 @@ export async function GET(request: NextRequest) {
 
     // Evidence completion trend (last 6 months)
     const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const monthlyEvidence = await prisma.evidence.groupBy({
-      by: ['uploadedAt'],
-      _count: true,
+    const recentEvidence = await prisma.evidence.findMany({
       where: {
         uploadedAt: { gte: sixMonthsAgo },
-        status: 'APPROVED',
       },
+      select: { uploadedAt: true, status: true },
     });
 
-    const evidenceCompletion = [
-      { name: 'Jan', value: 65 },
-      { name: 'Feb', value: 72 },
-      { name: 'Mar', value: 78 },
-      { name: 'Apr', value: 82 },
-      { name: 'May', value: 85 },
-      { name: 'Jun', value: 88 },
-    ];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyStats: Record<string, { total: number; approved: number }> = {};
+
+    const evidenceCompletion = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthStr = monthNames[d.getMonth()];
+      monthlyStats[monthStr] = { total: 0, approved: 0 };
+    }
+
+    recentEvidence.forEach(evidence => {
+      const monthStr = monthNames[evidence.uploadedAt.getMonth()];
+      if (monthlyStats[monthStr]) {
+        monthlyStats[monthStr].total++;
+        if (evidence.status === 'APPROVED') {
+          monthlyStats[monthStr].approved++;
+        }
+      }
+    });
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthStr = monthNames[d.getMonth()];
+      const stats = monthlyStats[monthStr];
+      let value = 0;
+      if (stats && stats.total > 0) {
+        value = Math.round((stats.approved / stats.total) * 100);
+      }
+      evidenceCompletion.push({ name: monthStr, value });
+    }
 
     // Compliance by department
-    const complianceByDepartment = [
-      { name: 'Security', compliant: 85, nonCompliant: 15 },
-      { name: 'Finance', compliant: 92, nonCompliant: 8 },
-      { name: 'Operations', compliant: 78, nonCompliant: 22 },
-      { name: 'HR', compliant: 88, nonCompliant: 12 },
-      { name: 'IT', compliant: 72, nonCompliant: 28 },
-    ];
+    const auditRequirements = await prisma.auditRequirement.findMany({
+      include: {
+        audit: { select: { department: true } },
+        requirement: { select: { responsibleDepartment: true } },
+      }
+    });
+
+    const deptStats: Record<string, { compliant: number; nonCompliant: number }> = {};
+
+    auditRequirements.forEach(ar => {
+      const dept = ar.audit?.department || ar.requirement?.responsibleDepartment || 'Unassigned';
+      if (!deptStats[dept]) {
+        deptStats[dept] = { compliant: 0, nonCompliant: 0 };
+      }
+      if (ar.status === 'COMPLIANT') {
+        deptStats[dept].compliant++;
+      } else if (['NON_COMPLIANT', 'PARTIALLY_COMPLIANT'].includes(ar.status)) {
+        deptStats[dept].nonCompliant++;
+      }
+    });
+
+    let complianceByDepartment = Object.entries(deptStats)
+      .map(([name, stats]) => {
+        const total = stats.compliant + stats.nonCompliant;
+        return {
+          name,
+          compliant: total > 0 ? Math.round((stats.compliant / total) * 100) : 0,
+          nonCompliant: total > 0 ? Math.round((stats.nonCompliant / total) * 100) : 0,
+          _total: total
+        };
+      })
+      .sort((a, b) => b._total - a._total) // Sort by total requirements
+      .slice(0, 5) // Take top 5
+      .map(({ name, compliant, nonCompliant }) => ({ name, compliant, nonCompliant }));
+      
+    if (complianceByDepartment.length === 0) {
+      // Fallback empty data if no DB data
+      complianceByDepartment.push({ name: 'No Data', compliant: 0, nonCompliant: 0 });
+    }
 
     return NextResponse.json({
       openAudits,

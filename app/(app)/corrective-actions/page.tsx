@@ -29,6 +29,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Search,
   Plus,
@@ -89,6 +91,16 @@ export default function CorrectiveActionsPage() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [caForm, setCaForm] = useState({ description: '', department: '', priority: 'MEDIUM', dueDate: '', assignedToId: '', findingId: '' });
+  const [findings, setFindings] = useState<{ id: string; findingNumber: string; title: string }[]>([]);
+  const [users, setUsers] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  // Update Progress dialog
+  const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<CorrectiveAction | null>(null);
+  const [newProgress, setNewProgress] = useState(0);
+  const [updatingProgress, setUpdatingProgress] = useState(false);
 
   useEffect(() => {
     fetchActions();
@@ -112,6 +124,72 @@ export default function CorrectiveActionsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchFindings = async () => {
+    try {
+      const res = await fetch('/api/findings');
+      if (res.ok) setFindings(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) { const d = await res.json(); setUsers([d.user]); }
+    } catch (e) { console.error(e); }
+  };
+
+  const openCreateDialog = () => {
+    fetchFindings();
+    fetchUsers();
+    setCaForm({ description: '', department: '', priority: 'MEDIUM', dueDate: '', assignedToId: '', findingId: '' });
+    setCreateDialogOpen(true);
+  };
+
+  const saveAction = async () => {
+    if (!caForm.description || !caForm.findingId || !caForm.assignedToId) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/corrective-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...caForm, dueDate: caForm.dueDate || null }),
+      });
+      if (res.ok) { setCreateDialogOpen(false); fetchActions(); }
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); }
+  };
+
+  const openProgressDialog = (action: CorrectiveAction) => {
+    setSelectedAction(action);
+    setNewProgress(action.progress);
+    setProgressDialogOpen(true);
+  };
+
+  const updateProgress = async () => {
+    if (!selectedAction) return;
+    setUpdatingProgress(true);
+    try {
+      const res = await fetch('/api/corrective-actions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedAction.id, progress: newProgress }),
+      });
+      if (res.ok) { setProgressDialogOpen(false); fetchActions(); }
+    } catch (e) { console.error(e); }
+    finally { setUpdatingProgress(false); }
+  };
+
+  const markComplete = async (action: CorrectiveAction) => {
+    try {
+      const res = await fetch('/api/corrective-actions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: action.id, status: 'COMPLETED', progress: 100 }),
+      });
+      if (res.ok) fetchActions();
+    } catch (e) { console.error(e); }
   };
 
   const formatDate = (dateStr?: string) => {
@@ -138,7 +216,7 @@ export default function CorrectiveActionsPage() {
             Track and manage remediation activities for audit findings
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={openCreateDialog}>
           <Plus className="mr-2 h-4 w-4" />
           New Action
         </Button>
@@ -227,8 +305,7 @@ export default function CorrectiveActionsPage() {
       </Card>
 
       {/* Actions Table */}
-      <Card>
-        <CardContent className="p-0">
+      <Card>        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -317,15 +394,11 @@ export default function CorrectiveActionsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openProgressDialog(action)}>
                               <Play className="mr-2 h-4 w-4" />
                               Update Progress
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => markComplete(action)} disabled={action.status === 'COMPLETED' || action.status === 'CLOSED'}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Mark Complete
                             </DropdownMenuItem>
@@ -340,6 +413,131 @@ export default function CorrectiveActionsPage() {
           </div>
         </CardContent>
       </Card>
+      {/* Update Progress Dialog */}
+      <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Update Progress</DialogTitle>
+            <DialogDescription>
+              {selectedAction && <span className="font-medium">{selectedAction.actionNumber}</span>}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {selectedAction && (
+              <div className="p-3 bg-muted rounded-md text-sm text-muted-foreground line-clamp-2">
+                {selectedAction.description}
+              </div>
+            )}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Progress</Label>
+                <span className="text-2xl font-bold">{newProgress}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={newProgress}
+                onChange={e => setNewProgress(Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 pt-1">
+                {[0, 25, 50, 75, 100].map(v => (
+                  <Button key={v} variant={newProgress === v ? 'default' : 'outline'} size="sm" onClick={() => setNewProgress(v)}>
+                    {v}%
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setProgressDialogOpen(false)}>Cancel</Button>
+              <Button className="flex-1" onClick={updateProgress} disabled={updatingProgress}>
+                {updatingProgress ? 'Saving...' : 'Save Progress'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Corrective Action Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New Corrective Action</DialogTitle>
+            <DialogDescription>Create a corrective action to remediate a finding.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Related Finding *</Label>
+              <Select value={caForm.findingId} onValueChange={v => setCaForm(f => ({ ...f, findingId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select finding..." /></SelectTrigger>
+                <SelectContent>
+                  {findings.map(f => (
+                    <SelectItem key={f.id} value={f.id}>{f.findingNumber} — {f.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Action Description *</Label>
+              <Textarea
+                placeholder="Describe what needs to be done to fix this issue..."
+                rows={3}
+                value={caForm.description}
+                onChange={e => setCaForm(f => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Select value={caForm.priority} onValueChange={v => setCaForm(f => ({ ...f, priority: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['CRITICAL','HIGH','MEDIUM','LOW'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Due Date</Label>
+                <Input type="date" value={caForm.dueDate} onChange={e => setCaForm(f => ({ ...f, dueDate: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <Input placeholder="e.g., IT, Finance" value={caForm.department} onChange={e => setCaForm(f => ({ ...f, department: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Assign To *</Label>
+                <Select value={caForm.assignedToId} onValueChange={v => setCaForm(f => ({ ...f, assignedToId: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select person..." /></SelectTrigger>
+                  <SelectContent>
+                    {users.map(u => <SelectItem key={u.id} value={u.id}>{u.firstName} {u.lastName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+              <Button
+                className="flex-1"
+                onClick={saveAction}
+                disabled={saving || !caForm.description || !caForm.findingId || !caForm.assignedToId}
+              >
+                {saving ? 'Saving...' : 'Create Action'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

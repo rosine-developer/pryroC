@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUserFromToken } from '@/lib/auth';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,11 +69,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { title, description, type, fileName, filePath, fileSize, mimeType, tags, requirementId, auditId } = body;
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const type = formData.get('type') as string;
+    const tags = formData.get('tags') as string;
+    const requirementId = formData.get('requirementId') as string;
+    const auditId = formData.get('auditId') as string;
 
     if (!title || !type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    let filePath = '';
+    let fileName = '';
+    let fileSize = 0;
+    let mimeType = '';
+
+    if (file) {
+      fileName = file.name;
+      fileSize = file.size;
+      mimeType = file.type;
+      
+      try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+        await mkdir(uploadDir, { recursive: true });
+        
+        const uniqueName = `${Date.now()}-${fileName.replace(/\s+/g, '_')}`;
+        const fullPath = path.join(uploadDir, uniqueName);
+        
+        await writeFile(fullPath, buffer);
+        filePath = `/uploads/${uniqueName}`;
+      } catch (err) {
+        console.error('File upload failed:', err);
+        return NextResponse.json({ error: 'Failed to write file to local disk.' }, { status: 500 });
+      }
     }
 
     // Generate evidence ID
@@ -82,12 +118,12 @@ export async function POST(request: NextRequest) {
       data: {
         evidenceId,
         title,
-        description,
+        description: description || '',
         type,
-        fileName,
+        fileName: fileName || '',
         filePath,
-        fileSize: fileSize || 0,
-        mimeType,
+        fileSize,
+        mimeType: mimeType || '',
         tags: tags || '',
         status: 'DRAFT',
         uploadedById: user.id,
