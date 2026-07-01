@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'dummy-key-to-bypass-build-error',
+  apiKey: process.env.GROQ_API_KEY || 'dummy-key-to-bypass-build-error',
+  baseURL: 'https://api.groq.com/openai/v1',
 });
 
 export async function POST(request: NextRequest) {
@@ -77,7 +78,7 @@ ${evidence.map(e => `- ${e.evidenceId} | ${e.title} | Type: ${e.type} | Status: 
 ### Current User: ${user.firstName} ${user.lastName} (${user.role})`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'llama3-8b-8192',
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages.map((m: { role: string; content: string }) => ({
