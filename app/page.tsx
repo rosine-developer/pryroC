@@ -43,14 +43,14 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-40 pb-28">
+      <section className="max-w-5xl mx-auto px-6 pt-40 pb-28 flex flex-col items-center text-center">
         <p className="text-xs font-medium tracking-widest text-black/30 uppercase mb-6">
           Audit & Compliance Platform
         </p>
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-[1.08] mb-6 max-w-2xl">
+        <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-[1.08] mb-6 max-w-2xl mx-auto">
           Audit smarter.<br />Ship compliance.
         </h1>
-        <p className="text-lg text-black/40 leading-relaxed max-w-lg mb-10">
+        <p className="text-lg text-black/40 leading-relaxed max-w-lg mx-auto mb-10">
           The complete GRC platform for audit teams. Plan, execute, and report — all in one place.
         </p>
         <Link
