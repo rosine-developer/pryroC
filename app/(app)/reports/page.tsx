@@ -33,6 +33,7 @@ interface ReportType {
   category: string;
 }
 
+const reportTypes: ReportType[] = [
   {
     id: 'audit',
     name: 'Audit Report',
