@@ -28,6 +28,12 @@ export default function LandingPage() {
             <Shield className="w-4 h-4" strokeWidth={2} />
             <span className="text-sm font-semibold tracking-tight">PryroGRC</span>
           </div>
+
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-black/60">
+            <a href="#features" className="hover:text-black transition-colors">Features</a>
+            <a href="#testimonials" className="hover:text-black transition-colors">Testimonials</a>
+          </div>
+
           <div className="flex items-center gap-6">
             <Link href="/auth" className="text-sm text-black/40 hover:text-black transition-colors">
               Sign in
@@ -81,7 +87,7 @@ export default function LandingPage() {
 
 
       {/* Features */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
+      <section id="features" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-14">
         <p className="text-xs font-medium tracking-widest text-black/30 uppercase mb-12">What's inside</p>
         <div className="grid md:grid-cols-2 gap-x-16 gap-y-10">
           {[
@@ -108,7 +114,7 @@ export default function LandingPage() {
 
 
       {/* Testimonials */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
+      <section id="testimonials" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-14">
         <p className="text-xs font-medium tracking-widest text-black/30 uppercase mb-12">From our users</p>
         <div className="grid md:grid-cols-3 gap-10">
           {[
