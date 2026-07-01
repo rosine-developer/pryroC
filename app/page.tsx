@@ -22,7 +22,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }} className="min-h-screen bg-white text-black">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-black/8">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-10">
             <div className="flex items-center gap-2">
