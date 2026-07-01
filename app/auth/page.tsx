@@ -84,9 +84,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-white flex items-center justify-center p-8">
       <div
-        className={`w-full max-w-4xl flex overflow-hidden shadow-xl transition-all duration-500 ${mode === 'register' ? 'flex-row-reverse' : ''}`}
+        className={`w-full max-w-4xl flex overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.08)] border border-black/5 transition-all duration-500 ${mode === 'register' ? 'flex-row-reverse' : ''}`}
         style={{ borderRadius: '30px', minHeight: '580px' }}
       >
         {/* Branding panel — black */}
