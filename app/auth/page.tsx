@@ -90,7 +90,7 @@ export default function AuthPage() {
         style={{ borderRadius: '30px', minHeight: '580px' }}
       >
         {/* Left — Black branding panel */}
-        <div className="hidden md:flex md:w-5/12 bg-black flex-col justify-between p-10 text-white shrink-0">
+        <div className="hidden md:flex md:w-1/2 bg-black flex-col justify-between p-10 text-white shrink-0">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-white" strokeWidth={2} />
             <span className="text-sm font-semibold tracking-tight">PryroGRC</span>
@@ -122,7 +122,7 @@ export default function AuthPage() {
         </div>
 
         {/* Right — White form panel */}
-        <div className="flex-1 bg-white flex items-center justify-center p-10">
+        <div className="w-1/2 bg-white flex items-center justify-center p-10">
           <div className="w-full max-w-sm">
             <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'register')}>
               <TabsList className="grid w-full grid-cols-2 mb-8" style={{ borderRadius: '12px' }}>
