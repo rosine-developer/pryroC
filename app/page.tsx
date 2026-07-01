@@ -161,10 +161,10 @@ export default function LandingPage() {
              {/* Sidebar */}
              <div className="w-24 space-y-2 pt-1">
                 <div className="text-[9px] font-semibold text-black bg-black/5 px-2 py-1 rounded">Dashboard</div>
-                <div className="text-[9px] font-medium text-black/40 px-2">Audits</div>
-                <div className="text-[9px] font-medium text-black/40 px-2">Findings</div>
+                <div className="text-[9px] font-medium text-black/40 px-2">Frameworks</div>
+                <div className="text-[9px] font-medium text-black/40 px-2">Controls</div>
                 <div className="text-[9px] font-medium text-black/40 px-2 mt-4 pt-2 border-t border-black/5">Evidence</div>
-                <div className="text-[9px] font-medium text-black/40 px-2">Reports</div>
+                <div className="text-[9px] font-medium text-black/40 px-2">Policies</div>
              </div>
              
              {/* Content */}
@@ -172,30 +172,45 @@ export default function LandingPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3">
                    <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm">
-                     <div className="text-[8px] font-medium text-black/40 uppercase mb-1">Active Audits</div>
-                     <div className="text-xl font-bold tracking-tight">3</div>
+                     <div className="text-[8px] font-medium text-black/40 uppercase mb-1">Compliance Score</div>
+                     <div className="text-xl font-bold tracking-tight text-green-600">92%</div>
                    </div>
                    <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm">
-                     <div className="text-[8px] font-medium text-black/40 uppercase mb-1">Open Findings</div>
-                     <div className="text-xl font-bold tracking-tight">14</div>
+                     <div className="text-[8px] font-medium text-black/40 uppercase mb-1">Failing Controls</div>
+                     <div className="text-xl font-bold tracking-tight text-red-500">3</div>
                    </div>
                 </div>
                 
                 {/* Chart/Table */}
                 <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm flex flex-col h-32">
-                   <div className="text-[9px] font-semibold text-black mb-3 border-b border-black/5 pb-2">Recent Findings</div>
-                   <div className="space-y-2.5">
-                     <div className="flex justify-between items-center">
-                       <span className="text-[8px] text-black/70">Unencrypted S3 Bucket</span>
-                       <span className="text-[7px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">HIGH</span>
+                   <div className="text-[9px] font-semibold text-black mb-3 border-b border-black/5 pb-2">Framework Status</div>
+                   <div className="space-y-3">
+                     <div className="space-y-1">
+                       <div className="flex justify-between items-center">
+                         <span className="text-[8px] font-medium">SOC 2 Type II</span>
+                         <span className="text-[8px] text-black/60">95%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden">
+                         <div className="h-full bg-green-500 rounded-full w-[95%]" />
+                       </div>
                      </div>
-                     <div className="flex justify-between items-center">
-                       <span className="text-[8px] text-black/70">Stale IAM Policies</span>
-                       <span className="text-[7px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">MED</span>
+                     <div className="space-y-1">
+                       <div className="flex justify-between items-center">
+                         <span className="text-[8px] font-medium">ISO 27001</span>
+                         <span className="text-[8px] text-black/60">88%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden">
+                         <div className="h-full bg-amber-500 rounded-full w-[88%]" />
+                       </div>
                      </div>
-                     <div className="flex justify-between items-center">
-                       <span className="text-[8px] text-black/70">Missing SOC2 Report</span>
-                       <span className="text-[7px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">HIGH</span>
+                     <div className="space-y-1">
+                       <div className="flex justify-between items-center">
+                         <span className="text-[8px] font-medium">GDPR</span>
+                         <span className="text-[8px] text-black/60">100%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden">
+                         <div className="h-full bg-black rounded-full w-full" />
+                       </div>
                      </div>
                    </div>
                 </div>
