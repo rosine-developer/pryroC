@@ -24,14 +24,27 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-black/8">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4" strokeWidth={2} />
-            <span className="text-sm font-semibold tracking-tight">PryroGRC</span>
-          </div>
+          <div className="flex items-center gap-10">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4" strokeWidth={2} />
+              <span className="text-sm font-semibold tracking-tight">PryroGRC</span>
+            </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-black/60">
-            <a href="#features" className="hover:text-black transition-colors">Features</a>
-            <a href="#testimonials" className="hover:text-black transition-colors">Testimonials</a>
+            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-black/60">
+              <div className="relative group py-4">
+                <a href="#features" className="hover:text-black transition-colors">Features</a>
+                <div className="absolute top-full left-0 w-48 bg-white border border-black/8 shadow-xl rounded-xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all -translate-y-2 group-hover:translate-y-0">
+                  <div className="flex flex-col">
+                    <a href="#features" className="text-black/60 hover:text-black hover:bg-black/5 px-3 py-2 rounded-lg text-xs font-medium transition-colors">Audit Management</a>
+                    <a href="#features" className="text-black/60 hover:text-black hover:bg-black/5 px-3 py-2 rounded-lg text-xs font-medium transition-colors">Risk Tracking</a>
+                    <a href="#features" className="text-black/60 hover:text-black hover:bg-black/5 px-3 py-2 rounded-lg text-xs font-medium transition-colors">Document Center</a>
+                    <a href="#features" className="text-black/60 hover:text-black hover:bg-black/5 px-3 py-2 rounded-lg text-xs font-medium transition-colors">Regulatory Matrix</a>
+                    <a href="#features" className="text-black/60 hover:text-black hover:bg-black/5 px-3 py-2 rounded-lg text-xs font-medium transition-colors">AI Assistant</a>
+                  </div>
+                </div>
+              </div>
+              <a href="#customers" className="hover:text-black transition-colors py-4">Customers</a>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
@@ -113,8 +126,8 @@ export default function LandingPage() {
 
 
 
-      {/* Testimonials */}
-      <section id="testimonials" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-14">
+      {/* Customers */}
+      <section id="customers" className="max-w-5xl mx-auto px-6 py-24 scroll-mt-14">
         <p className="text-xs font-medium tracking-widest text-black/30 uppercase mb-12">From our users</p>
         <div className="grid md:grid-cols-3 gap-10">
           {[
