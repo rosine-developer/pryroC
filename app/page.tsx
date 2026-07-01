@@ -62,10 +62,7 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      {/* Divider */}
-      <div className="max-w-5xl mx-auto px-6">
-        <hr className="border-black/8" />
-      </div>
+
 
       {/* Stats row */}
       <section className="max-w-5xl mx-auto px-6 py-16 grid grid-cols-3 gap-0 divide-x divide-black/8">
@@ -81,10 +78,7 @@ export default function LandingPage() {
         ))}
       </section>
 
-      {/* Divider */}
-      <div className="max-w-5xl mx-auto px-6">
-        <hr className="border-black/8" />
-      </div>
+
 
       {/* Features */}
       <section className="max-w-5xl mx-auto px-6 py-24">
@@ -111,10 +105,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Divider */}
-      <div className="max-w-5xl mx-auto px-6">
-        <hr className="border-black/8" />
-      </div>
+
 
       {/* Testimonials */}
       <section className="max-w-5xl mx-auto px-6 py-24">
@@ -134,30 +125,80 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Divider */}
-      <div className="max-w-5xl mx-auto px-6">
-        <hr className="border-black/8" />
-      </div>
+
 
       {/* CTA */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
-        <h2 className="text-3xl font-bold tracking-tight mb-3">Ready to get started?</h2>
-        <p className="text-black/40 text-sm mb-8">
-          Create your account and run your first audit today. No credit card required.
-        </p>
-        <Link
-          href="/auth"
-          className="inline-flex items-center gap-2 bg-black text-white text-sm font-medium px-6 py-3 rounded-lg hover:bg-black/80 transition-colors"
-        >
-          Create free account
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+      <section className="max-w-5xl mx-auto px-6 py-24 flex flex-col md:flex-row items-center gap-16">
+        <div className="flex-1">
+          <h2 className="text-3xl font-bold tracking-tight mb-3">Ready to get started?</h2>
+          <p className="text-black/40 text-sm mb-8 max-w-sm">
+            Create your account and run your first audit today. No credit card required.
+          </p>
+          <Link
+            href="/auth"
+            className="inline-flex items-center gap-2 bg-black text-white text-sm font-medium px-6 py-3 rounded-lg hover:bg-black/80 transition-colors"
+          >
+            Create free account
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Dashboard Mockup */}
+        <div className="w-full md:w-[450px] bg-white border border-black/8 shadow-2xl rounded-2xl overflow-hidden flex flex-col shrink-0 relative" style={{ height: '320px' }}>
+          {/* Header */}
+          <div className="h-12 border-b border-black/5 flex items-center px-4 justify-between bg-white z-10">
+             <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-black/10" />
+               <div className="w-2.5 h-2.5 rounded-full bg-black/10" />
+               <div className="w-2.5 h-2.5 rounded-full bg-black/10" />
+             </div>
+             <div className="text-[10px] font-semibold text-black/40 uppercase tracking-widest">PryroGRC</div>
+             <div className="w-6 h-6 rounded-full bg-black/5" />
+          </div>
+          
+          {/* Body */}
+          <div className="flex flex-1 p-4 gap-4 bg-[#fafafa]">
+             {/* Sidebar */}
+             <div className="w-24 space-y-3 pt-2">
+                <div className="h-2 w-full bg-black/10 rounded-full" />
+                <div className="h-2 w-2/3 bg-black/10 rounded-full" />
+                <div className="h-2 w-4/5 bg-black/10 rounded-full" />
+                <div className="h-2 w-full bg-black/10 rounded-full mt-6" />
+                <div className="h-2 w-3/4 bg-black/10 rounded-full" />
+             </div>
+             
+             {/* Content */}
+             <div className="flex-1 space-y-4">
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                   <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm">
+                     <div className="h-2 w-1/2 bg-black/10 rounded-full mb-3" />
+                     <div className="h-5 w-3/4 bg-black/80 rounded" />
+                   </div>
+                   <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm">
+                     <div className="h-2 w-1/2 bg-black/10 rounded-full mb-3" />
+                     <div className="h-5 w-1/2 bg-black/80 rounded" />
+                   </div>
+                </div>
+                
+                {/* Chart/Table */}
+                <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm h-32 flex flex-col justify-center">
+                   <div className="h-2 w-1/3 bg-black/10 rounded-full mb-5" />
+                   <div className="space-y-3">
+                     <div className="h-2 w-full bg-black/5 rounded-full" />
+                     <div className="h-2 w-full bg-black/5 rounded-full" />
+                     <div className="h-2 w-5/6 bg-black/5 rounded-full" />
+                   </div>
+                </div>
+             </div>
+          </div>
+
+          {/* Fade out bottom overlay */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        </div>
       </section>
 
-      {/* Footer */}
-      <div className="max-w-5xl mx-auto px-6">
-        <hr className="border-black/8" />
-      </div>
+
       <footer className="max-w-5xl mx-auto px-6 py-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shield className="w-3.5 h-3.5" strokeWidth={2} />
