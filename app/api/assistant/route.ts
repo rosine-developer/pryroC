@@ -78,7 +78,7 @@ ${evidence.map(e => `- ${e.evidenceId} | ${e.title} | Type: ${e.type} | Status: 
 ### Current User: ${user.firstName} ${user.lastName} (${user.role})`;
 
     const completion = await openai.chat.completions.create({
-      model: 'llama3-8b-8192',
+      model: 'gpt-oss-20b',
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages.map((m: { role: string; content: string }) => ({
