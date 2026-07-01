@@ -86,10 +86,10 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-8">
       <div
-        className="w-full max-w-4xl flex overflow-hidden shadow-xl"
+        className={`w-full max-w-4xl flex overflow-hidden shadow-xl transition-all duration-500 ${mode === 'register' ? 'flex-row-reverse' : ''}`}
         style={{ borderRadius: '30px', minHeight: '580px' }}
       >
-        {/* Left — Black branding panel */}
+        {/* Branding panel — black */}
         <div className="hidden md:flex md:w-1/2 bg-black flex-col justify-between p-10 text-white shrink-0">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-white" strokeWidth={2} />
@@ -121,7 +121,7 @@ export default function AuthPage() {
           <p className="text-xs text-white/25">Enterprise-grade security &amp; compliance</p>
         </div>
 
-        {/* Right — White form panel */}
+        {/* Form panel — white */}
         <div className="w-1/2 bg-white flex items-center justify-center p-10">
           <div className="w-full max-w-sm">
             <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'register')}>
