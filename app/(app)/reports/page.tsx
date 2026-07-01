@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { generateAuditReport, generateFindingReport } from '@/lib/report-generator';
 import {
   Select,
   SelectContent,
@@ -33,13 +33,12 @@ interface ReportType {
   category: string;
 }
 
-const reportTypes: ReportType[] = [
   {
     id: 'audit',
     name: 'Audit Report',
     description: 'Comprehensive audit execution report with findings and recommendations',
     icon: FileText,
-    formats: ['PDF', 'Word', 'Excel'],
+    formats: ['PDF'],
     category: 'Audit',
   },
   {
@@ -47,7 +46,7 @@ const reportTypes: ReportType[] = [
     name: 'Finding Report',
     description: 'Detailed list of all findings with severity, status, and corrective actions',
     icon: AlertTriangle,
-    formats: ['PDF', 'Excel'],
+    formats: ['PDF'],
     category: 'Findings',
   },
   {
@@ -55,7 +54,7 @@ const reportTypes: ReportType[] = [
     name: 'Evidence Report',
     description: 'Complete evidence inventory with compliance mapping',
     icon: FolderOpen,
-    formats: ['PDF', 'Excel'],
+    formats: ['PDF'],
     category: 'Evidence',
   },
   {
@@ -63,7 +62,7 @@ const reportTypes: ReportType[] = [
     name: 'Compliance Report',
     description: 'Compliance status by regulation and department',
     icon: BarChart,
-    formats: ['PDF', 'Word', 'Excel'],
+    formats: ['PDF'],
     category: 'Compliance',
   },
   {
@@ -71,7 +70,7 @@ const reportTypes: ReportType[] = [
     name: 'Department Report',
     description: 'Audit and compliance status by department',
     icon: Building,
-    formats: ['PDF', 'Excel'],
+    formats: ['PDF'],
     category: 'Department',
   },
   {
@@ -79,7 +78,7 @@ const reportTypes: ReportType[] = [
     name: 'Corrective Action Report',
     description: 'Status of all corrective actions and remediation progress',
     icon: CheckSquare,
-    formats: ['PDF', 'Excel'],
+    formats: ['PDF'],
     category: 'Corrective Actions',
   },
 ];
@@ -93,13 +92,42 @@ export default function ReportsPage() {
   const handleGenerate = async (reportType: ReportType, format: string) => {
     setGenerating(reportType.id);
 
-    // Simulate report generation
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      if (reportType.id === 'findings') {
+        const res = await fetch('/api/findings');
+        const data = await res.json();
+        generateFindingReport(data, 'Current User'); // Ideally get user name from context
+        toast.success(`${reportType.name} generated successfully`);
+      } else if (reportType.id === 'audit') {
+        // If an audit is selected, fetch that specific one, otherwise fetch the first one for demo purposes
+        const auditsRes = await fetch('/api/audits');
+        const audits = await auditsRes.json();
+        const auditToReport = selectedAudit && selectedAudit !== 'all' 
+          ? audits.find((a: any) => a.auditNumber === selectedAudit) 
+          : audits[0];
 
-    setGenerating(null);
-    toast.success(`${reportType.name} generated successfully in ${format} format`, {
-      description: 'Report is ready for download',
-    });
+        if (!auditToReport) {
+          toast.error('No audits found to generate a report.');
+          setGenerating(null);
+          return;
+        }
+
+        const findingsRes = await fetch(`/api/findings?auditId=${auditToReport.id}`);
+        const findings = await findingsRes.json();
+
+        generateAuditReport(auditToReport, findings, 'Current User');
+        toast.success(`${reportType.name} generated successfully`);
+      } else {
+        // Fallback for reports not yet implemented
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        toast.info(`${reportType.name} generation is coming soon!`);
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    } finally {
+      setGenerating(null);
+    }
   };
 
   return (
@@ -217,44 +245,6 @@ export default function ReportsPage() {
           </Card>
         ))}
       </div>
-
-      {/* Recent Reports */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
-          <CardDescription>Download previously generated reports</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { name: 'Q2 2024 Audit Report.pdf', type: 'Audit Report', date: '2024-06-28', size: '2.4 MB' },
-              { name: 'Security Compliance Status.xlsx', type: 'Compliance Report', date: '2024-06-27', size: '1.1 MB' },
-              { name: 'Finding Summary - June 2024.pdf', type: 'Finding Report', date: '2024-06-25', size: '856 KB' },
-              { name: 'IT Department Audit.docx', type: 'Department Report', date: '2024-06-20', size: '1.8 MB' },
-            ].map((report, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded bg-card flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">{report.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {report.type} • {report.date} • {report.size}
-                    </div>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => toast.success(`Downloading ${report.name}...`, { description: 'Your download should start shortly.' })}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
