@@ -247,7 +247,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={() => toast.success(`Downloading ${report.name}...`, { description: 'Your download should start shortly.' })}>
                   <Download className="h-4 w-4" />
                 </Button>
               </div>
