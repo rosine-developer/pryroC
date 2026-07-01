@@ -3,7 +3,8 @@ import OpenAI from 'openai';
 import { getUserFromToken } from '@/lib/auth';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: 'https://api.groq.com/openai/v1',
 });
 
 const SYSTEM_PROMPT = `You are an expert AI Compliance & Audit Assistant built into a professional audit management platform called PryroC. You help compliance officers, internal auditors, and risk managers work more efficiently.
@@ -44,9 +45,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
+    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your-groq-api-key-here') {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured. Please add your OPENAI_API_KEY to the .env file.' },
+        { error: 'Groq API key not configured. Please add your GROQ_API_KEY to the .env file.' },
         { status: 503 }
       );
     }
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     }));
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'llama3-8b-8192',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...openaiMessages,
@@ -76,10 +77,10 @@ export async function POST(request: NextRequest) {
     console.error('AI chat error:', error);
 
     if (error?.status === 401) {
-      return NextResponse.json({ error: 'Invalid OpenAI API key.' }, { status: 503 });
+      return NextResponse.json({ error: 'Invalid Groq API key.' }, { status: 503 });
     }
     if (error?.status === 429) {
-      return NextResponse.json({ error: 'OpenAI rate limit reached. Please try again shortly.' }, { status: 429 });
+      return NextResponse.json({ error: 'Groq rate limit reached. Please try again shortly.' }, { status: 429 });
     }
 
     return NextResponse.json({ error: 'Failed to get AI response.' }, { status: 500 });
