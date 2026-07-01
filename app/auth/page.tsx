@@ -84,252 +84,136 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col justify-between p-12 text-primary-foreground">
-        <div>
-          <div className="flex items-center gap-3">
-            <Shield className="w-10 h-10" />
-            <span className="text-2xl font-bold">PryroGRC</span>
-          </div>
+    <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div
+        className="w-full max-w-md bg-white border border-black/8 shadow-sm"
+        style={{ borderRadius: '30px', padding: '40px' }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-10">
+          <Shield className="w-4 h-4" strokeWidth={2} />
+          <span className="text-sm font-semibold tracking-tight">PryroGRC</span>
         </div>
 
-        <div className="space-y-8">
-          <h1 className="text-4xl font-bold leading-tight">
-            AI-Powered Audit & Compliance Management
-          </h1>
-          <p className="text-lg text-primary-foreground/80 leading-relaxed">
-            Streamline your complete audit process from planning to reporting.
-            Built for internal auditors, external auditors, compliance officers,
-            and regulatory inspectors.
-          </p>
+        <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'register')}>
+          <TabsList className="grid w-full grid-cols-2 mb-8" style={{ borderRadius: '12px' }}>
+            <TabsTrigger value="login" style={{ borderRadius: '10px' }}>Sign In</TabsTrigger>
+            <TabsTrigger value="register" style={{ borderRadius: '10px' }}>Create Account</TabsTrigger>
+          </TabsList>
 
-          <div className="grid grid-cols-2 gap-6 pt-8">
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">Unified</div>
-              <div className="text-sm text-primary-foreground/70">Regulatory Matrix</div>
+          <TabsContent value="login">
+            <div className="mb-6">
+              <h1 className="text-xl font-bold tracking-tight">Welcome back</h1>
+              <p className="text-sm text-black/40 mt-1">Enter your credentials to continue</p>
             </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">Automated</div>
-              <div className="text-sm text-primary-foreground/70">Evidence Locker</div>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-medium text-black/50">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@company.com"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  disabled={loading}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-xs font-medium text-black/50">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    disabled={loading}
+                    className="rounded-xl"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4 text-black/30" /> : <Eye className="h-4 w-4 text-black/30" />}
+                  </Button>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-black text-white hover:bg-black/80 rounded-xl mt-2"
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign In
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="register">
+            <div className="mb-6">
+              <h1 className="text-xl font-bold tracking-tight">Create account</h1>
+              <p className="text-sm text-black/40 mt-1">Get started with PryroGRC today</p>
             </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">AI-Powered</div>
-              <div className="text-sm text-primary-foreground/70">Audit Assistant</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold">Complete</div>
-              <div className="text-sm text-primary-foreground/70">Audit Trail</div>
-            </div>
-          </div>
-        </div>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="firstName" className="text-xs font-medium text-black/50">First Name</Label>
+                  <Input id="firstName" placeholder="John" value={registerForm.firstName} onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })} disabled={loading} className="rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lastName" className="text-xs font-medium text-black/50">Last Name</Label>
+                  <Input id="lastName" placeholder="Doe" value={registerForm.lastName} onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })} disabled={loading} className="rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-email" className="text-xs font-medium text-black/50">Email</Label>
+                <Input id="reg-email" type="email" placeholder="name@company.com" value={registerForm.email} onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })} disabled={loading} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-black/50">Role</Label>
+                <Select value={registerForm.role} onValueChange={(value) => setRegisterForm({ ...registerForm, role: value })}>
+                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select role" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADMINISTRATOR">Administrator</SelectItem>
+                    <SelectItem value="LEAD_AUDITOR">Lead Auditor</SelectItem>
+                    <SelectItem value="AUDITOR">Auditor</SelectItem>
+                    <SelectItem value="COMPLIANCE_OFFICER">Compliance Officer</SelectItem>
+                    <SelectItem value="DEPARTMENT_OWNER">Department Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="department" className="text-xs font-medium text-black/50">Department</Label>
+                <Input id="department" placeholder="e.g. Security, Finance" value={registerForm.department} onChange={(e) => setRegisterForm({ ...registerForm, department: e.target.value })} disabled={loading} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-password" className="text-xs font-medium text-black/50">Password</Label>
+                <div className="relative">
+                  <Input id="reg-password" type={showPassword ? 'text' : 'password'} placeholder="Min. 8 characters" value={registerForm.password} onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })} disabled={loading} className="rounded-xl" />
+                  <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-4 w-4 text-black/30" /> : <Eye className="h-4 w-4 text-black/30" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword" className="text-xs font-medium text-black/50">Confirm Password</Label>
+                <Input id="confirmPassword" type="password" placeholder="Confirm your password" value={registerForm.confirmPassword} onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })} disabled={loading} className="rounded-xl" />
+              </div>
+              <Button type="submit" className="w-full bg-black text-white hover:bg-black/80 rounded-xl mt-2" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Account
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
 
-        <div className="text-sm text-primary-foreground/60">
-          Enterprise-grade security & compliance
-        </div>
-      </div>
-
-      {/* Right Panel - Auth Forms */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <Shield className="w-8 h-8" />
-            <span className="text-xl font-bold">PryroGRC</span>
-          </div>
-
-          <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'register')}>
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="register">Create Account</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="space-y-1 pb-4">
-                  <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@company.com"
-                        value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                        disabled={loading}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter your password"
-                          value={loginForm.password}
-                          onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                          disabled={loading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loading}
-                    >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Sign In
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <Card className="border-0 shadow-none">
-                <CardHeader className="space-y-1 pb-4">
-                  <CardTitle className="text-2xl font-bold">Create account</CardTitle>
-                  <CardDescription>
-                    Get started with your audit management platform
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          placeholder="John"
-                          value={registerForm.firstName}
-                          onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })}
-                          disabled={loading}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          placeholder="Doe"
-                          value={registerForm.lastName}
-                          onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })}
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="reg-email">Email</Label>
-                      <Input
-                        id="reg-email"
-                        type="email"
-                        placeholder="name@company.com"
-                        value={registerForm.email}
-                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                        disabled={loading}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Role</Label>
-                      <Select
-                        value={registerForm.role}
-                        onValueChange={(value) => setRegisterForm({ ...registerForm, role: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ADMINISTRATOR">Administrator</SelectItem>
-                          <SelectItem value="LEAD_AUDITOR">Lead Auditor</SelectItem>
-                          <SelectItem value="AUDITOR">Auditor</SelectItem>
-                          <SelectItem value="COMPLIANCE_OFFICER">Compliance Officer</SelectItem>
-                          <SelectItem value="DEPARTMENT_OWNER">Department Owner</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
-                      <Input
-                        id="department"
-                        placeholder="e.g., Security, Finance, Operations"
-                        value={registerForm.department}
-                        onChange={(e) => setRegisterForm({ ...registerForm, department: e.target.value })}
-                        disabled={loading}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="reg-password">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="reg-password"
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="Min. 8 characters"
-                          value={registerForm.password}
-                          onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                          disabled={loading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Confirm your password"
-                        value={registerForm.confirmPassword}
-                        onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                        disabled={loading}
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loading}
-                    >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Create Account
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
-          </p>
-        </div>
+        <p className="text-center text-xs text-black/25 mt-8">
+          By continuing, you agree to our Terms of Service and Privacy Policy.
+        </p>
       </div>
     </div>
   );
