@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Shield, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -84,17 +85,23 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-8">
+    <div className="min-h-screen bg-white flex items-center justify-center p-8 relative">
+      {/* Floating Back Button */}
+      <Link href="/" className="absolute top-6 left-6 flex items-center gap-2 text-sm text-black/40 hover:text-black transition-colors font-medium">
+        <ArrowLeft className="w-4 h-4" />
+        Back to home
+      </Link>
+
       <div
         className={`w-full max-w-4xl flex overflow-hidden shadow-[0_8px_40px_rgb(0,0,0,0.08)] border border-black/5 transition-all duration-500 ${mode === 'register' ? 'flex-row-reverse' : ''}`}
         style={{ borderRadius: '30px', minHeight: '580px' }}
       >
         {/* Branding panel — black */}
         <div className="hidden md:flex md:w-1/2 bg-black flex-col justify-between p-10 text-white shrink-0">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity w-max">
             <Shield className="w-4 h-4 text-white" strokeWidth={2} />
             <span className="text-sm font-semibold tracking-tight">PryroGRC</span>
-          </div>
+          </Link>
 
           <div className="space-y-6">
             <h2 className="text-2xl font-bold leading-snug">
