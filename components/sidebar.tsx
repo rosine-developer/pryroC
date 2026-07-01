@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Regulations', href: '/regulations', icon: FileText },
-  { name: 'Evidence Locker', href: '/evidence', icon: FolderOpen },
+  { name: 'Documents', href: '/evidence', icon: FolderOpen },
   { name: 'Audits', href: '/audits', icon: ClipboardCheck },
   { name: 'Findings', href: '/findings', icon: AlertTriangle },
   { name: 'Corrective Actions', href: '/corrective-actions', icon: CheckSquare },

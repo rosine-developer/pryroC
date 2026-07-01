@@ -60,6 +60,7 @@ interface Evidence {
   title: string;
   description?: string;
   type: string;
+  classification: string;
   fileName?: string;
   filePath?: string;
   fileSize?: number;
@@ -106,17 +107,26 @@ const typeLabels: Record<string, string> = {
   OTHER: 'Other',
 };
 
+const classificationLabels: Record<string, string> = {
+  EVIDENCE: 'Evidence',
+  FINDING: 'Finding Report',
+  POLICY: 'Policy Document',
+  CERTIFICATE: 'Certificate',
+  OTHER: 'Other',
+};
+
 export default function EvidencePage() {
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [classificationFilter, setClassificationFilter] = useState('all');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchEvidence();
-  }, [search, typeFilter, statusFilter]);
+  }, [search, typeFilter, statusFilter, classificationFilter]);
 
   const fetchEvidence = async () => {
     setLoading(true);
@@ -125,6 +135,7 @@ export default function EvidencePage() {
       if (search) params.append('search', search);
       if (typeFilter !== 'all') params.append('type', typeFilter);
       if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (classificationFilter !== 'all') params.append('classification', classificationFilter);
 
       const response = await fetch(`/api/evidence?${params.toString()}`);
       if (response.ok) {
@@ -168,9 +179,9 @@ export default function EvidencePage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Evidence Locker</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
           <p className="text-muted-foreground">
-            Secure repository for all audit evidence with complete audit trail
+            Secure repository for all documents, findings, and evidence.
           </p>
         </div>
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
@@ -253,11 +264,22 @@ export default function EvidencePage() {
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[160px]">
                 <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Type" />
+                <SelectValue placeholder="Format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="all">All Formats</SelectItem>
                 {Object.entries(typeLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={classificationFilter} onValueChange={setClassificationFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Classification" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classifications</SelectItem>
+                {Object.entries(classificationLabels).map(([key, label]) => (
                   <SelectItem key={key} value={key}>{label}</SelectItem>
                 ))}
               </SelectContent>
@@ -284,9 +306,10 @@ export default function EvidencePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Evidence ID</TableHead>
+                  <TableHead>Document ID</TableHead>
                   <TableHead className="w-[300px]">Title</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Classification</TableHead>
+                  <TableHead>Format</TableHead>
                   <TableHead>Related Requirement</TableHead>
                   <TableHead>Version</TableHead>
                   <TableHead>Uploaded By</TableHead>
@@ -325,6 +348,9 @@ export default function EvidencePage() {
                               </div>
                             )}
                           </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{classificationLabels[item.classification] || item.classification}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -404,6 +430,7 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    classification: 'EVIDENCE',
     type: 'PDF',
     tags: '',
     requirementId: '',
@@ -446,6 +473,7 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
       const detectedType = (ext && typeMap[ext]) || formData.type;
       data.append('type', detectedType);
       
+      data.append('classification', formData.classification);
       data.append('tags', formData.tags);
       if (formData.requirementId) data.append('requirementId', formData.requirementId);
       if (formData.auditId) data.append('auditId', formData.auditId);
@@ -540,7 +568,23 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Type</Label>
+          <Label>Classification *</Label>
+          <Select
+            value={formData.classification}
+            onValueChange={(value) => setFormData({ ...formData, classification: value })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(classificationLabels).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Format (Optional override)</Label>
           <Select
             value={formData.type}
             onValueChange={(value) => setFormData({ ...formData, type: value })}
@@ -555,15 +599,16 @@ function EvidenceUploadForm({ onSuccess }: { onSuccess: () => void }) {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="tags">Tags</Label>
-          <Input
-            id="tags"
-            placeholder="Comma-separated tags"
-            value={formData.tags}
-            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-          />
-        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="tags">Tags</Label>
+        <Input
+          id="tags"
+          placeholder="Comma-separated tags"
+          value={formData.tags}
+          onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+        />
       </div>
 
       <div className="space-y-2">

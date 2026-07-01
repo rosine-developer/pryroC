@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const type = searchParams.get('type');
     const status = searchParams.get('status');
+    const classification = searchParams.get('classification');
 
     const where: any = {};
 
@@ -37,6 +38,10 @@ export async function GET(request: NextRequest) {
 
     if (status && status !== 'all') {
       where.status = status;
+    }
+
+    if (classification && classification !== 'all') {
+      where.classification = classification;
     }
 
     const evidence = await prisma.evidence.findMany({
@@ -75,6 +80,7 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description') as string;
     const type = formData.get('type') as string;
     const tags = formData.get('tags') as string;
+    const classification = formData.get('classification') as string || 'EVIDENCE';
     const requirementId = formData.get('requirementId') as string;
     const auditId = formData.get('auditId') as string;
 
@@ -125,6 +131,7 @@ export async function POST(request: NextRequest) {
         fileSize,
         mimeType: mimeType || '',
         tags: tags || '',
+        classification,
         status: 'DRAFT',
         uploadedById: user.id,
         requirementId: requirementId || null,

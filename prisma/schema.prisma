@@ -165,6 +165,7 @@ model Evidence {
   mimeType              String?
   version               String          @default("1.0")
   tags                  String
+  classification        String          @default("EVIDENCE")
   status                EvidenceStatus  @default(DRAFT)
   uploadedById          String
   uploadedAt            DateTime        @default(now())
