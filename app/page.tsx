@@ -159,12 +159,12 @@ export default function LandingPage() {
           {/* Body */}
           <div className="flex flex-1 p-4 gap-4 bg-[#fafafa]">
              {/* Sidebar */}
-             <div className="w-24 space-y-3 pt-2">
-                <div className="h-2 w-full bg-black/10 rounded-full" />
-                <div className="h-2 w-2/3 bg-black/10 rounded-full" />
-                <div className="h-2 w-4/5 bg-black/10 rounded-full" />
-                <div className="h-2 w-full bg-black/10 rounded-full mt-6" />
-                <div className="h-2 w-3/4 bg-black/10 rounded-full" />
+             <div className="w-24 space-y-2 pt-1">
+                <div className="text-[9px] font-semibold text-black bg-black/5 px-2 py-1 rounded">Dashboard</div>
+                <div className="text-[9px] font-medium text-black/40 px-2">Audits</div>
+                <div className="text-[9px] font-medium text-black/40 px-2">Findings</div>
+                <div className="text-[9px] font-medium text-black/40 px-2 mt-4 pt-2 border-t border-black/5">Evidence</div>
+                <div className="text-[9px] font-medium text-black/40 px-2">Reports</div>
              </div>
              
              {/* Content */}
@@ -172,22 +172,31 @@ export default function LandingPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3">
                    <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm">
-                     <div className="h-2 w-1/2 bg-black/10 rounded-full mb-3" />
-                     <div className="h-5 w-3/4 bg-black/80 rounded" />
+                     <div className="text-[8px] font-medium text-black/40 uppercase mb-1">Active Audits</div>
+                     <div className="text-xl font-bold tracking-tight">3</div>
                    </div>
                    <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm">
-                     <div className="h-2 w-1/2 bg-black/10 rounded-full mb-3" />
-                     <div className="h-5 w-1/2 bg-black/80 rounded" />
+                     <div className="text-[8px] font-medium text-black/40 uppercase mb-1">Open Findings</div>
+                     <div className="text-xl font-bold tracking-tight">14</div>
                    </div>
                 </div>
                 
                 {/* Chart/Table */}
-                <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm h-32 flex flex-col justify-center">
-                   <div className="h-2 w-1/3 bg-black/10 rounded-full mb-5" />
-                   <div className="space-y-3">
-                     <div className="h-2 w-full bg-black/5 rounded-full" />
-                     <div className="h-2 w-full bg-black/5 rounded-full" />
-                     <div className="h-2 w-5/6 bg-black/5 rounded-full" />
+                <div className="bg-white p-4 rounded-xl border border-black/5 shadow-sm flex flex-col h-32">
+                   <div className="text-[9px] font-semibold text-black mb-3 border-b border-black/5 pb-2">Recent Findings</div>
+                   <div className="space-y-2.5">
+                     <div className="flex justify-between items-center">
+                       <span className="text-[8px] text-black/70">Unencrypted S3 Bucket</span>
+                       <span className="text-[7px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">HIGH</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-[8px] text-black/70">Stale IAM Policies</span>
+                       <span className="text-[7px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">MED</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                       <span className="text-[8px] text-black/70">Missing SOC2 Report</span>
+                       <span className="text-[7px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">HIGH</span>
+                     </div>
                    </div>
                 </div>
              </div>
