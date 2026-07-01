@@ -16,7 +16,8 @@ export default function LandingPage() {
     }
   }, [user, loading, router]);
 
-  if (loading || user) return null;
+  // Don't block render on loading — only redirect if confirmed logged in
+  if (!loading && user) return null;
 
   return (
     <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }} className="min-h-screen bg-white text-black">
